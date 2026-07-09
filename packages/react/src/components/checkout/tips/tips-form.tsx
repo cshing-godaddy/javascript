@@ -29,6 +29,8 @@ interface TipsFormProps {
   currencyCode?: string;
 }
 
+const DEFAULT_TIP_PERCENTAGES = [15, 18, 20];
+
 export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
   const { t } = useGoDaddyContext();
   const form = useFormContext();
@@ -92,8 +94,16 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
     });
   };
 
-  const tipPercentages = options?.default?.percentages || [15, 18, 20];
   const tipPercentage = form.watch('tipPercentage');
+  const tipPercentages = options?.default?.percentages || DEFAULT_TIP_PERCENTAGES;
+
+  const tipAmount = form.watch('tipAmount');
+  let tipAmounts: number[] = [];
+  if (options?.thresholds?.[0]?.maxSubtotal && subtotal < Number(options?.thresholds?.[0]?.maxSubtotal)) {
+    tipAmounts = options?.thresholds?.[0]?.amounts || [];
+  } else if (options?.default?.amounts) {
+    tipAmounts = options?.default?.amounts;
+  }
 
   return (
     <fieldset className='space-y-4'>
@@ -102,31 +112,57 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
         role='radiogroup'
         aria-label={t.tips?.title || 'Tip amount'}
       >
-        {tipPercentages.map(percentage => (
-          <Button
-            key={percentage}
-            type='button'
-            variant='outline'
-            className={cn(
-              'h-16 flex flex-col items-center justify-center gap-y-0.5 hover:bg-muted',
-              tipPercentage === percentage
-                ? 'border-muted-foreground'
-                : 'bg-card active:ring'
-            )}
-            onClick={() => handlePercentageSelect(percentage)}
-            aria-checked={tipPercentage === percentage ? 'true' : 'false'}
-          >
-            <span className='text-lg leading-tight font-bold'>
-              {percentage}%
-            </span>
-            <span className='text-sm'>
-              {formatCurrency({
-                amount: calculateTipAmount(percentage),
-                currencyCode: currencyCode || 'USD',
-                inputInMinorUnits: true,
-              })}
-            </span>
-          </Button>
+        {tipAmounts?.length ? (
+          tipAmounts.map((amount) => (
+            <Button
+              key={amount}
+              type='button'
+              variant='outline'
+              className={cn(
+                'h-16 flex flex-col items-center justify-center gap-y-0.5 hover:bg-muted',
+                tipAmount === amount
+                  ? 'border-muted-foreground'
+                  : 'bg-card active:ring'
+              )}
+              onClick={() => form.setValue('tipAmount', amount)}
+              aria-checked={tipAmount === amount ? 'true' : 'false'}
+            >
+              <span className='text-base'>
+                {formatCurrency({
+                  amount,
+                  currencyCode: currencyCode || 'USD',
+                  inputInMinorUnits: true,
+                })}
+              </span>
+            </Button>
+          ))
+        ) : (
+          tipPercentages.map(percentage => (
+            <Button
+              key={percentage}
+              type='button'
+              variant='outline'
+              className={cn(
+                'h-16 flex flex-col items-center justify-center gap-y-0.5 hover:bg-muted',
+                tipPercentage === percentage
+                  ? 'border-muted-foreground'
+                  : 'bg-card active:ring'
+              )}
+              onClick={() => handlePercentageSelect(percentage)}
+              aria-checked={tipPercentage === percentage ? 'true' : 'false'}
+            >
+              <span className='text-lg leading-tight font-bold'>
+                {percentage}%
+              </span>
+              <span className='text-sm'>
+                {formatCurrency({
+                  amount: calculateTipAmount(percentage),
+                  currencyCode: currencyCode || 'USD',
+                  inputInMinorUnits: true,
+                })}
+              </span>
+            </Button>
+          )
         ))}
       </div>
 
