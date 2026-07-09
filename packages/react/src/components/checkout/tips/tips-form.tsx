@@ -21,13 +21,15 @@ import { useGoDaddyContext } from '@/godaddy-provider';
 import { cn } from '@/lib/utils';
 import { eventIds } from '@/tracking/events';
 import { TrackingEventType, track } from '@/tracking/track';
+import { type CheckoutSession } from '@/types';
 
 interface TipsFormProps {
-  total: number;
+  subtotal: number;
+  options?: CheckoutSession['tips'];
   currencyCode?: string;
 }
 
-export function TipsForm({ total, currencyCode }: TipsFormProps) {
+export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
   const { t } = useGoDaddyContext();
   const form = useFormContext();
   const formatCurrency = useFormatCurrency();
@@ -35,7 +37,7 @@ export function TipsForm({ total, currencyCode }: TipsFormProps) {
 
   const calculateTipAmount = (percentage: number): number => {
     // total is in minor units, so calculate percentage and return in minor units
-    return Math.round((total * percentage) / 100);
+    return Math.round((subtotal * percentage) / 100);
   };
 
   const handlePercentageSelect = (percentage: number) => {
@@ -51,7 +53,7 @@ export function TipsForm({ total, currencyCode }: TipsFormProps) {
       properties: {
         tipPercentage: percentage,
         tipAmount: tipAmount,
-        totalBeforeTip: total,
+        totalBeforeTip: subtotal,
         currencyCode,
       },
     });
@@ -69,7 +71,7 @@ export function TipsForm({ total, currencyCode }: TipsFormProps) {
       properties: {
         tipPercentage: 0,
         tipAmount: 0,
-        totalBeforeTip: total,
+        totalBeforeTip: subtotal,
         currencyCode,
       },
     });
@@ -84,13 +86,13 @@ export function TipsForm({ total, currencyCode }: TipsFormProps) {
       eventId: eventIds.enterCustomTip,
       type: TrackingEventType.CLICK,
       properties: {
-        totalBeforeTip: total,
+        totalBeforeTip: subtotal,
         currencyCode,
       },
     });
   };
 
-  const tipPercentages = [15, 18, 20];
+  const tipPercentages = options?.default?.percentages || [15, 18, 20];
   const tipPercentage = form.watch('tipPercentage');
 
   return (
@@ -162,7 +164,7 @@ export function TipsForm({ total, currencyCode }: TipsFormProps) {
       {showCustomTip ? (
         <CustomTipInput
           currencyCode={currencyCode}
-          total={total}
+          subtotal={subtotal}
           formatCurrency={formatCurrency}
         />
       ) : null}
@@ -186,7 +188,7 @@ export function TipsForm({ total, currencyCode }: TipsFormProps) {
  */
 interface CustomTipInputProps {
   currencyCode?: string;
-  total: number;
+  subtotal: number;
   formatCurrency: (options: FormatCurrencyOptions) => string;
 }
 
@@ -221,7 +223,7 @@ function symbolPadding(symbol: string, position: 'prefix' | 'suffix') {
 
 function CustomTipInput({
   currencyCode,
-  total,
+  subtotal,
   formatCurrency,
 }: CustomTipInputProps) {
   const { t } = useGoDaddyContext();
@@ -375,10 +377,10 @@ function CustomTipInput({
                       type: TrackingEventType.CLICK,
                       properties: {
                         tipAmount: tipAmount,
-                        totalBeforeTip: total,
+                        totalBeforeTip: subtotal,
                         tipPercentage:
-                          total > 0
-                            ? Number(((tipAmount / total) * 100).toFixed(2))
+                          subtotal > 0
+                            ? Number(((tipAmount / subtotal) * 100).toFixed(2))
                             : 0,
                         currencyCode,
                       },
