@@ -22,6 +22,18 @@ export default async function Home() {
       enableNotesCollection: true,
       enablePromotionCodes: true,
       enableTips: true,
+      tips: {
+        default: {
+          percentages: [ 20, 40, 60 ]
+        },
+        thresholds: [
+          {
+            minSubtotal: 0,
+            maxSubtotal: 1000,
+            amounts: [ 300, 500, 700 ]
+          }
+        ]
+      },
       shipping: {
         fulfillmentLocationId: 'default-location',
         originAddress: {

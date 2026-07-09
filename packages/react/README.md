@@ -41,6 +41,7 @@ The first parameter accepts all checkout session configuration options from the 
 - **`enableSurcharge`** (boolean): Enable surcharge fees
 - **`enableTaxCollection`** (boolean): Enable tax collection
 - **`enableTips`** (boolean): Enable tip/gratuity options
+- **`tips`** (CheckoutSessionTipsInput): Tip option configuration (see [Tips](#tips))
 - **`enabledLocales`** ([String!]): List of enabled locales
 - **`enabledPaymentProviders`** ([String!]): List of enabled payment providers
 - **`environment`** (enum): Environment - `ote`, `prod`
@@ -134,6 +135,43 @@ operatingHours: {
 - **Lead time vs slot interval** — A store with `leadTime: 1440` (24 hours) and `pickupSlotInterval: 15` shows 15-minute slots starting tomorrow, not 24-hour gaps.
 - **Timezone handling** — All date/time logic uses the store's `timeZone`, not the customer's browser timezone. A store in Phoenix shows Phoenix hours regardless of where the customer is browsing from.
 - **No available slots** — In `dateAndTime` mode, when leadTime exceeds the entire pickup window, no days are enabled, or no selectable slots exist, a "No available time slots" banner is shown.
+
+### Tips
+
+The `tips` field configures preset tip options shown to the customer when `enableTips` is `true`. Tips supports a `default` preset and optional `thresholds` that activate based on the order subtotal. Only one of `amounts` or `percentages` should be provided — not both.
+
+```typescript
+tips: {
+  default: {
+    percentages: [15, 18, 20],
+  },
+  thresholds: [
+    {
+      minSubtotal: 0,
+      maxSubtotal: 1000,
+      amounts: [100, 200, 500],
+    },
+  ],
+}
+```
+
+#### `tips.default`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `amounts` | number[] | No | Fixed tip amounts in the smallest currency unit (e.g. cents). |
+| `percentages` | number[] | No | Tip percentage options (integers between 0 and 100). |
+
+#### `tips.thresholds`
+
+An array of threshold objects that override the default tips when the order subtotal falls within the specified range.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `minSubtotal` | number | No | Minimum order subtotal (inclusive) in the smallest currency unit for this threshold to apply. |
+| `maxSubtotal` | number | No | Maximum order subtotal (exclusive) in the smallest currency unit for this threshold to apply. |
+| `amounts` | number[] | No | Fixed tip amounts in the smallest currency unit (e.g. cents). |
+| `percentages` | number[] | No | Tip percentage options (integers between 0 and 100). |
 
 ### Appearance
 

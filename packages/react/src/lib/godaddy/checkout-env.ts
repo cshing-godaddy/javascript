@@ -1871,6 +1871,15 @@ const introspection = {
             "isDeprecated": false
           },
           {
+            "name": "tips",
+            "type": {
+              "kind": "OBJECT",
+              "name": "CheckoutSessionTips"
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
             "name": "enabledLocales",
             "type": {
               "kind": "LIST",
@@ -3678,6 +3687,233 @@ const introspection = {
           }
         ],
         "isOneOf": false
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "CheckoutSessionTipsInput",
+        "inputFields": [
+          {
+            "name": "default",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "CheckoutSessionTipsDefaultInput"
+            }
+          },
+          {
+            "name": "thresholds",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "CheckoutSessionTipsThresholdInput"
+                }
+              }
+            }
+          }
+        ],
+        "isOneOf": false
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "CheckoutSessionTipsDefaultInput",
+        "inputFields": [
+          {
+            "name": "amounts",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            }
+          },
+          {
+            "name": "percentages",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            }
+          }
+        ],
+        "isOneOf": false
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "CheckoutSessionTipsThresholdInput",
+        "inputFields": [
+          {
+            "name": "minSubtotal",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          },
+          {
+            "name": "maxSubtotal",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          },
+          {
+            "name": "amounts",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            }
+          },
+          {
+            "name": "percentages",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            }
+          }
+        ],
+        "isOneOf": false
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CheckoutSessionTips",
+        "fields": [
+          {
+            "name": "default",
+            "type": {
+              "kind": "OBJECT",
+              "name": "CheckoutSessionTipsDefault"
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
+            "name": "thresholds",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "CheckoutSessionTipsThreshold"
+                }
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CheckoutSessionTipsDefault",
+        "fields": [
+          {
+            "name": "amounts",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
+            "name": "percentages",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CheckoutSessionTipsThreshold",
+        "fields": [
+          {
+            "name": "minSubtotal",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int"
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
+            "name": "maxSubtotal",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int"
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
+            "name": "amounts",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
+            "name": "percentages",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          }
+        ]
       },
       {
         "kind": "OBJECT",
@@ -7951,6 +8187,13 @@ const introspection = {
             "type": {
               "kind": "SCALAR",
               "name": "Boolean"
+            }
+          },
+          {
+            "name": "tips",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "CheckoutSessionTipsInput"
             }
           },
           {
