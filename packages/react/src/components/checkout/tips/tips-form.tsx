@@ -42,6 +42,24 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
     return Math.round((subtotal * percentage) / 100);
   };
 
+  const handleAmountSelect = (amount: number) => {
+    form.setValue('tipAmount', amount);
+    form.setValue('tipPercentage', null);
+    setShowCustomTip(false);
+
+    // Track tip amount selection
+    track({
+      eventId: eventIds.selectTipAmount,
+      type: TrackingEventType.CLICK,
+      properties: {
+        tipPercentage: null,
+        tipAmount: amount,
+        totalBeforeTip: subtotal,
+        currencyCode,
+      },
+    });
+  };
+
   const handlePercentageSelect = (percentage: number) => {
     const tipAmount = calculateTipAmount(percentage);
     form.setValue('tipAmount', tipAmount);
@@ -81,6 +99,7 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
 
   const handleCustomTip = () => {
     setShowCustomTip(true);
+    form.setValue('tipAmount', 0);
     form.setValue('tipPercentage', null);
 
     // Track custom tip selection
@@ -124,7 +143,7 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
                   ? 'border-muted-foreground'
                   : 'bg-card active:ring'
               )}
-              onClick={() => form.setValue('tipAmount', amount)}
+              onClick={() => handleAmountSelect(amount)}
               aria-checked={tipAmount === amount ? 'true' : 'false'}
             >
               <span className='text-base'>
@@ -176,10 +195,10 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
           variant='outline'
           className={cn(
             'h-12 font-normal hover:bg-muted',
-            tipPercentage === 0 && 'border-muted-foreground'
+            !tipAmount && tipPercentage === 0 && 'border-muted-foreground'
           )}
           onClick={handleNoTip}
-          aria-checked={tipPercentage === 0 ? 'true' : 'false'}
+          aria-checked={!tipAmount && tipPercentage === 0 ? 'true' : 'false'}
         >
           {t.tips.noTip}
         </Button>
