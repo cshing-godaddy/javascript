@@ -34,8 +34,12 @@ function getMercadoPagoInstance(publicKey: string) {
 
 export function MercadoPagoCheckoutButton() {
   const { t } = useGoDaddyContext();
-  const { mercadoPagoConfig, setCheckoutErrors, isConfirmingCheckout } =
-    useCheckoutContext();
+  const {
+    mercadoPagoConfig,
+    setCheckoutErrors,
+    isConfirmingCheckout,
+    session,
+  } = useCheckoutContext();
   const isPaymentDisabled = useIsPaymentDisabled();
   const { data: totals } = useDraftOrderTotals();
   const form = useFormContext();
@@ -116,15 +120,16 @@ export function MercadoPagoCheckoutButton() {
       } else {
         // Create new brick
         const renderBrick = async () => {
-          // Convert from minor units (cents) to major units
-          const total = parseFloat(
-            formatCurrency({
-              amount: totals?.total?.value || 0,
-              currencyCode: totals?.total?.currencyCode || 'USD',
-              inputInMinorUnits: true,
-              returnRaw: true,
-            })
-          );
+          const tipAmount = form.getValues('tipAmount') || 0;
+          const total =
+            parseFloat(
+              formatCurrency({
+                amount: (totals?.total?.value || 0) + tipAmount,
+                currencyCode: totals?.total?.currencyCode || 'USD',
+                inputInMinorUnits: true,
+                returnRaw: true,
+              })
+            ) + (session?.enableTips ? tipAmount : 0);
 
           try {
             const container = document.getElementById(elementId);
