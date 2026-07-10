@@ -124,7 +124,7 @@ export function MercadoPagoCheckoutButton() {
           const total =
             parseFloat(
               formatCurrency({
-                amount: (totals?.total?.value || 0) + tipAmount,
+                amount: (totals?.total?.value || 0) + (session?.enableTips ? tipAmount : 0),
                 currencyCode: totals?.total?.currencyCode || 'USD',
                 inputInMinorUnits: true,
                 returnRaw: true,
