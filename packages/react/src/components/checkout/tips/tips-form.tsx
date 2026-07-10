@@ -114,18 +114,24 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
   };
 
   const tipPercentage = form.watch('tipPercentage');
-  const tipPercentages =
-    options?.default?.percentages || DEFAULT_TIP_PERCENTAGES;
+  let tipPercentages = options?.default?.percentages;
 
   const tipAmount = form.watch('tipAmount');
-  let tipAmounts: number[] = [];
-  if (
-    options?.thresholds?.[0]?.maxSubtotal &&
-    subtotal < Number(options?.thresholds?.[0]?.maxSubtotal)
-  ) {
-    tipAmounts = options?.thresholds?.[0]?.amounts || [];
-  } else if (options?.default?.amounts) {
-    tipAmounts = options?.default?.amounts;
+  let tipAmounts = options?.default?.amounts;
+
+  const threshold = options?.thresholds?.find(
+    thres =>
+      thres?.minSubtotal &&
+      thres?.maxSubtotal &&
+      subtotal >= thres.minSubtotal &&
+      subtotal <= thres.maxSubtotal
+  );
+  if (threshold) {
+    if (threshold.amounts) {
+      tipAmounts = threshold.amounts;
+    } else if (threshold.percentages) {
+      tipPercentages = threshold.percentages;
+    }
   }
 
   return (
@@ -159,7 +165,7 @@ export function TipsForm({ subtotal, options, currencyCode }: TipsFormProps) {
                 </span>
               </Button>
             ))
-          : tipPercentages.map(percentage => (
+          : (tipPercentages || DEFAULT_TIP_PERCENTAGES).map(percentage => (
               <Button
                 key={percentage}
                 type='button'

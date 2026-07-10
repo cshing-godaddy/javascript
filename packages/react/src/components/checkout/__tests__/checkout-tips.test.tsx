@@ -462,4 +462,426 @@ describe('Checkout tips', () => {
       tipAmount: 0,
     });
   });
+
+  describe('options.thresholds', () => {
+    it('uses default percentages when no thresholds match the subtotal', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [10, 15, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 100000,
+                maxSubtotal: 200000,
+                percentages: [5, 8, 12],
+                amounts: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(await screen.findByRole('button', { name: /10%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /15%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /20%/ })).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: /\b5%/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('uses threshold percentages when subtotal falls within a threshold range', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [10, 15, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 2000,
+                maxSubtotal: 5000,
+                percentages: [5, 8, 12],
+                amounts: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(await screen.findByRole('button', { name: /5%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /8%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /12%/ })).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: /10%/ })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /15%/ })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /20%/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('uses threshold amounts (flat values) when a matching threshold specifies amounts', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [10, 15, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 2000,
+                maxSubtotal: 5000,
+                amounts: [100, 200, 500],
+                percentages: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(
+        await screen.findByRole('button', { name: /\$1\.00/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /\$2\.00/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /\$5\.00/ })
+      ).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: /10%/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('threshold amounts take priority over threshold percentages when both are provided', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [10, 15, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 2000,
+                maxSubtotal: 5000,
+                amounts: [100, 200, 500],
+                percentages: [5, 8, 12],
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(
+        await screen.findByRole('button', { name: /\$1\.00/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /\$2\.00/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /\$5\.00/ })
+      ).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: /5%/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('matches the correct threshold when multiple thresholds are defined', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [15, 18, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 1000,
+                maxSubtotal: 3000,
+                percentages: [5, 8, 10],
+                amounts: null,
+              },
+              {
+                minSubtotal: 3001,
+                maxSubtotal: 10000,
+                percentages: [3, 5, 7],
+                amounts: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 5000, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 5000, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(await screen.findByRole('button', { name: /3%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /5%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /7%/ })).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: /15%/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('applies threshold at boundary: subtotal equals minSubtotal', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [15, 18, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 2500,
+                maxSubtotal: 5000,
+                percentages: [5, 8, 12],
+                amounts: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(await screen.findByRole('button', { name: /5%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /8%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /12%/ })).toBeVisible();
+    });
+
+    it('applies threshold at boundary: subtotal equals maxSubtotal', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: [15, 18, 20], amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 2000,
+                maxSubtotal: 2500,
+                percentages: [5, 8, 12],
+                amounts: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(await screen.findByRole('button', { name: /5%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /8%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /12%/ })).toBeVisible();
+    });
+
+    it('clicking a threshold amount button selects it and updates the total', async () => {
+      const { user } = renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: null, amounts: null },
+            thresholds: [
+              {
+                minSubtotal: 2000,
+                maxSubtotal: 5000,
+                amounts: [200, 500, 1000],
+                percentages: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      const fiveDollarBtn = await screen.findByRole('button', {
+        name: /\$5\.00/,
+      });
+      await user.click(fiveDollarBtn);
+
+      await waitFor(() => {
+        expect(fiveDollarBtn).toHaveAttribute('aria-checked', 'true');
+        expect(screen.getAllByText('$30.00').length).toBeGreaterThan(0);
+      });
+    });
+
+    it('uses default amounts when options.default.amounts is provided and no threshold matches', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: {
+            default: { percentages: null, amounts: [100, 300, 500] },
+            thresholds: [
+              {
+                minSubtotal: 100000,
+                maxSubtotal: 200000,
+                percentages: [1, 2, 3],
+                amounts: null,
+              },
+            ],
+          },
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(
+        await screen.findByRole('button', { name: /\$1\.00/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /\$3\.00/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /\$5\.00/ })
+      ).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: /15%/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('falls back to DEFAULT_TIP_PERCENTAGES when no options are provided', async () => {
+      renderCheckout({
+        sessionOverrides: {
+          enableTips: true,
+          enableShipping: false,
+          enableLocalPickup: false,
+          enableTaxCollection: false,
+          tips: null,
+        },
+        draftOrderOverrides: {
+          totals: {
+            subTotal: { value: 2500, currencyCode: 'USD' },
+            discountTotal: { value: 0, currencyCode: 'USD' },
+            shippingTotal: { value: 0, currencyCode: 'USD' },
+            taxTotal: { value: 0, currencyCode: 'USD' },
+            feeTotal: { value: 0, currencyCode: 'USD' },
+            total: { value: 2500, currencyCode: 'USD' },
+          },
+        },
+      });
+      await waitForCheckoutReady();
+
+      expect(
+        await screen.findByRole('button', { name: /15%/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /18%/ })
+      ).toBeVisible();
+      expect(
+        await screen.findByRole('button', { name: /20%/ })
+      ).toBeVisible();
+    });
+  });
 });
