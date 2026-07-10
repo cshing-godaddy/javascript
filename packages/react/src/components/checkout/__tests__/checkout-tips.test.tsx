@@ -873,15 +873,9 @@ describe('Checkout tips', () => {
       });
       await waitForCheckoutReady();
 
-      expect(
-        await screen.findByRole('button', { name: /15%/ })
-      ).toBeVisible();
-      expect(
-        await screen.findByRole('button', { name: /18%/ })
-      ).toBeVisible();
-      expect(
-        await screen.findByRole('button', { name: /20%/ })
-      ).toBeVisible();
+      expect(await screen.findByRole('button', { name: /15%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /18%/ })).toBeVisible();
+      expect(await screen.findByRole('button', { name: /20%/ })).toBeVisible();
     });
   });
 });
