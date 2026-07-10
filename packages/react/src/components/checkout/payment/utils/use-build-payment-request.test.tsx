@@ -1,7 +1,11 @@
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutContext } from '@/components/checkout/checkout';
+import {
+  type CheckoutFormData,
+  checkoutContext,
+} from '@/components/checkout/checkout';
 import { checkoutQueryKeys } from '@/components/checkout/utils/query-keys';
 import { GoDaddyProvider } from '@/godaddy-provider';
 import type { CheckoutSession, DraftOrder, SKUProduct } from '@/types';
@@ -48,6 +52,17 @@ function productNode(overrides: Partial<SKUProduct> = {}): SKUProduct {
   } as SKUProduct;
 }
 
+function FormWrapper({
+  defaultValues,
+  children,
+}: {
+  defaultValues?: Partial<CheckoutFormData>;
+  children: React.ReactNode;
+}) {
+  const methods = useForm<CheckoutFormData>({ defaultValues: defaultValues ?? {} });
+  return <FormProvider {...methods}>{children}</FormProvider>;
+}
+
 function PaymentRequestProbe({
   onRequests,
 }: {
@@ -66,10 +81,12 @@ async function renderUseBuildPaymentRequest({
   draftOrderOverrides,
   sessionOverrides,
   products = [productNode()],
+  formDefaultValues,
 }: {
   draftOrderOverrides?: DeepPartial<DraftOrder>;
   sessionOverrides?: DeepPartial<CheckoutSession>;
   products?: SKUProduct[];
+  formDefaultValues?: Partial<CheckoutFormData>;
 } = {}) {
   const queryClient = createTestQueryClient();
   const draftOrder = buildDraftOrder(draftOrderOverrides);
@@ -104,7 +121,9 @@ async function renderUseBuildPaymentRequest({
           setCheckoutErrors: () => undefined,
         }}
       >
-        <PaymentRequestProbe onRequests={onRequests} />
+        <FormWrapper defaultValues={formDefaultValues}>
+          <PaymentRequestProbe onRequests={onRequests} />
+        </FormWrapper>
       </checkoutContext.Provider>
     </GoDaddyProvider>
   );
@@ -375,6 +394,143 @@ describe('useBuildPaymentRequest', () => {
     expect(requests.squarePaymentRequest.amount).toBe('1.234');
     expect(requests.googlePayRequest.transactionInfo.totalPrice).toContain(
       '1.234'
+    );
+  });
+
+  it('includes tipAmount in payment request totals when enableTips is true', async () => {
+    const { requests } = await renderUseBuildPaymentRequest({
+      sessionOverrides: {
+        enableTips: true,
+      },
+      draftOrderOverrides: {
+        lineItems: [
+          buildLineItem({
+            name: 'Coffee Mug',
+            quantity: 1,
+            details: { sku: 'mug-sku' },
+            totals: {
+              subTotal: money(2000),
+              discountTotal: money(0),
+              feeTotal: money(0),
+              taxTotal: money(0),
+            },
+            unitAmount: money(2000),
+          }),
+        ],
+        shippingLines: [],
+        totals: {
+          subTotal: money(2000),
+          discountTotal: money(0),
+          shippingTotal: money(0),
+          taxTotal: money(0),
+          feeTotal: money(0),
+          total: money(2000),
+        },
+      },
+      products: [productNode({ code: 'mug-sku', label: 'Coffee Mug' })],
+      formDefaultValues: { tipAmount: 500 },
+    });
+
+    // Apple Pay total includes tip
+    expect(requests.applePayRequest.total.amount).toBe('$25.00');
+    expect(requests.applePayRequest.lineItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Tip', amount: '$5.00', type: 'final' }),
+      ])
+    );
+
+    // Google Pay total includes tip
+    expect(requests.googlePayRequest.transactionInfo.totalPrice).toBe('$25.00');
+    expect(requests.googlePayRequest.transactionInfo.displayItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Tip', price: 5, type: 'LINE_ITEM', status: 'FINAL' }),
+      ])
+    );
+
+    // PayPal total includes tip in breakdown and items
+    expect(requests.payPalRequest.purchase_units[0].amount.value).toBe('25.00');
+    expect(requests.payPalRequest.purchase_units[0].amount.breakdown.item_total.value).toBe('25.00');
+    expect(requests.payPalRequest.purchase_units[0].items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'Tip',
+          unit_amount: { currency_code: 'USD', value: '5.00' },
+          quantity: '1',
+        }),
+      ])
+    );
+
+    // Square total includes tip
+    expect(requests.squarePaymentRequest.amount).toBe('25.00');
+
+    // Poynt Standard includes tip line item
+    expect(requests.poyntStandardRequest.lineItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Tip', amount: '5.00' }),
+      ])
+    );
+  });
+
+  it('excludes tipAmount from payment requests when enableTips is false', async () => {
+    const { requests } = await renderUseBuildPaymentRequest({
+      sessionOverrides: {
+        enableTips: false,
+      },
+      draftOrderOverrides: {
+        lineItems: [
+          buildLineItem({
+            name: 'Coffee Mug',
+            quantity: 1,
+            details: { sku: 'mug-sku' },
+            totals: {
+              subTotal: money(2000),
+              discountTotal: money(0),
+              feeTotal: money(0),
+              taxTotal: money(0),
+            },
+            unitAmount: money(2000),
+          }),
+        ],
+        shippingLines: [],
+        totals: {
+          subTotal: money(2000),
+          discountTotal: money(0),
+          shippingTotal: money(0),
+          taxTotal: money(0),
+          feeTotal: money(0),
+          total: money(2000),
+        },
+      },
+      products: [productNode({ code: 'mug-sku', label: 'Coffee Mug' })],
+      formDefaultValues: { tipAmount: 500 },
+    });
+
+    // Totals should NOT include tip when enableTips is false
+    expect(requests.applePayRequest.total.amount).toBe('$20.00');
+    expect(requests.googlePayRequest.transactionInfo.totalPrice).toBe('$20.00');
+    expect(requests.payPalRequest.purchase_units[0].amount.value).toBe('20.00');
+    expect(requests.squarePaymentRequest.amount).toBe('20.00');
+
+    // No Tip line item in any request
+    expect(requests.applePayRequest.lineItems).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Tip' }),
+      ])
+    );
+    expect(requests.googlePayRequest.transactionInfo.displayItems).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Tip' }),
+      ])
+    );
+    expect(requests.payPalRequest.purchase_units[0].items).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Tip' }),
+      ])
+    );
+    expect(requests.poyntStandardRequest.lineItems).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Tip' }),
+      ])
     );
   });
 });
