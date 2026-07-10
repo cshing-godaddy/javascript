@@ -7985,13 +7985,6 @@ const introspection = {
                 "name": "String"
               }
             }
-          },
-          {
-            "name": "tipAmount",
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int"
-            }
           }
         ],
         "isOneOf": false
