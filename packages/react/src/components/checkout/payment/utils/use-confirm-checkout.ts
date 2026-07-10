@@ -184,7 +184,7 @@ export function useConfirmCheckout() {
           ...confirmCheckoutInput,
           ...pickUpData,
           tipAmount,
-        }
+        };
 
         // keep for debugging
         // console.log({
@@ -215,11 +215,7 @@ export function useConfirmCheckout() {
               { accessToken: jwt, sessionId: session?.id || '' },
               apiHost
             )
-          : await confirmCheckout(
-              payload,
-              session,
-              apiHost
-            );
+          : await confirmCheckout(payload, session, apiHost);
 
         if (!data) {
           throw new Error('Checkout confirmation failed');
