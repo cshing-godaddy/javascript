@@ -121,15 +121,16 @@ export function MercadoPagoCheckoutButton() {
         // Create new brick
         const renderBrick = async () => {
           const tipAmount = form.getValues('tipAmount') || 0;
-          const total =
-            parseFloat(
-              formatCurrency({
-                amount: (totals?.total?.value || 0) + (session?.enableTips ? tipAmount : 0),
-                currencyCode: totals?.total?.currencyCode || 'USD',
-                inputInMinorUnits: true,
-                returnRaw: true,
-              })
-            ) + (session?.enableTips ? tipAmount : 0);
+          const total = parseFloat(
+            formatCurrency({
+              amount:
+                (totals?.total?.value || 0) +
+                (session?.enableTips ? tipAmount : 0),
+              currencyCode: totals?.total?.currencyCode || 'USD',
+              inputInMinorUnits: true,
+              returnRaw: true,
+            })
+          );
 
           try {
             const container = document.getElementById(elementId);

@@ -33,7 +33,9 @@ export function useStripePaymentIntent({
 
   const draftOrderTotalsQuery = useDraftOrderTotals();
   const { data: totals, isLoading: isLoadingTotals } = draftOrderTotalsQuery;
-  const amount = totals?.total?.value || 0;
+  const total = totals?.total?.value || 0;
+  const tipAmount = form?.getValues('tipAmount') || 0;
+  const amount = session?.enableTips ? total + tipAmount : total;
   const currency = totals?.total?.currencyCode?.toLowerCase() || 'usd';
 
   const [stripePromise, setStripePromise] =

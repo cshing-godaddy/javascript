@@ -59,7 +59,9 @@ function FormWrapper({
   defaultValues?: Partial<CheckoutFormData>;
   children: React.ReactNode;
 }) {
-  const methods = useForm<CheckoutFormData>({ defaultValues: defaultValues ?? {} });
+  const methods = useForm<CheckoutFormData>({
+    defaultValues: defaultValues ?? {},
+  });
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
 
@@ -435,7 +437,11 @@ describe('useBuildPaymentRequest', () => {
     expect(requests.applePayRequest.total.amount).toBe('$25.00');
     expect(requests.applePayRequest.lineItems).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: 'Tip', amount: '$5.00', type: 'final' }),
+        expect.objectContaining({
+          label: 'Tip',
+          amount: '$5.00',
+          type: 'final',
+        }),
       ])
     );
 
@@ -443,13 +449,20 @@ describe('useBuildPaymentRequest', () => {
     expect(requests.googlePayRequest.transactionInfo.totalPrice).toBe('$25.00');
     expect(requests.googlePayRequest.transactionInfo.displayItems).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: 'Tip', price: 5, type: 'LINE_ITEM', status: 'FINAL' }),
+        expect.objectContaining({
+          label: 'Tip',
+          price: 5,
+          type: 'LINE_ITEM',
+          status: 'FINAL',
+        }),
       ])
     );
 
     // PayPal total includes tip in breakdown and items
     expect(requests.payPalRequest.purchase_units[0].amount.value).toBe('25.00');
-    expect(requests.payPalRequest.purchase_units[0].amount.breakdown.item_total.value).toBe('25.00');
+    expect(
+      requests.payPalRequest.purchase_units[0].amount.breakdown.item_total.value
+    ).toBe('25.00');
     expect(requests.payPalRequest.purchase_units[0].items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -513,24 +526,16 @@ describe('useBuildPaymentRequest', () => {
 
     // No Tip line item in any request
     expect(requests.applePayRequest.lineItems).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ label: 'Tip' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ label: 'Tip' })])
     );
     expect(requests.googlePayRequest.transactionInfo.displayItems).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ label: 'Tip' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ label: 'Tip' })])
     );
     expect(requests.payPalRequest.purchase_units[0].items).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Tip' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ name: 'Tip' })])
     );
     expect(requests.poyntStandardRequest.lineItems).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ label: 'Tip' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ label: 'Tip' })])
     );
   });
 });

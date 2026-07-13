@@ -652,7 +652,7 @@ export function useBuildPaymentRequest(): {
     total: {
       label: 'Order Total',
       amount: formatCurrency({
-        amount: totalMinorUnits,
+        amount: session?.enableTips ? totalWithTipMinorUnits : totalMinorUnits,
         currencyCode,
         inputInMinorUnits: true,
         returnRaw: true,
