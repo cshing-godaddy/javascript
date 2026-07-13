@@ -11172,13 +11172,6 @@ const introspection = {
             }
           },
           {
-            "name": "feeProgramId",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String"
-            }
-          },
-          {
             "name": "feeProgramType",
             "type": {
               "kind": "NON_NULL",
