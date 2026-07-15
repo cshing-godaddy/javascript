@@ -476,12 +476,53 @@ describe('useBuildPaymentRequest', () => {
     // Square total includes tip
     expect(requests.squarePaymentRequest.amount).toBe('25.00');
 
+    // Poynt Express total includes tip
+    expect(requests.poyntExpressRequest.total.amount).toBe('25.00');
+
     // Poynt Standard includes tip line item
     expect(requests.poyntStandardRequest.lineItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: 'Tip', amount: '5.00' }),
       ])
     );
+  });
+
+  it('includes tax and tip in poyntExpressRequest.total.amount when applicable', async () => {
+    const { requests } = await renderUseBuildPaymentRequest({
+      sessionOverrides: {
+        enableTips: true,
+      },
+      draftOrderOverrides: {
+        lineItems: [
+          buildLineItem({
+            name: 'Coffee Mug',
+            quantity: 1,
+            details: { sku: 'mug-sku' },
+            totals: {
+              subTotal: money(2000),
+              discountTotal: money(0),
+              feeTotal: money(0),
+              taxTotal: money(200),
+            },
+            unitAmount: money(2000),
+          }),
+        ],
+        shippingLines: [],
+        totals: {
+          subTotal: money(2000),
+          discountTotal: money(0),
+          shippingTotal: money(0),
+          taxTotal: money(200),
+          feeTotal: money(0),
+          total: money(2200),
+        },
+      },
+      products: [productNode({ code: 'mug-sku', label: 'Coffee Mug' })],
+      formDefaultValues: { tipAmount: 300 },
+    });
+
+    // total is $22.00 (subtotal $20 + tax $2) + tip $3 = $25.00
+    expect(requests.poyntExpressRequest.total.amount).toBe('25.00');
   });
 
   it('excludes tipAmount from payment requests when enableTips is false', async () => {
@@ -523,6 +564,7 @@ describe('useBuildPaymentRequest', () => {
     expect(requests.googlePayRequest.transactionInfo.totalPrice).toBe('$20.00');
     expect(requests.payPalRequest.purchase_units[0].amount.value).toBe('20.00');
     expect(requests.squarePaymentRequest.amount).toBe('20.00');
+    expect(requests.poyntExpressRequest.total.amount).toBe('20.00');
 
     // No Tip line item in any request
     expect(requests.applePayRequest.lineItems).not.toEqual(
